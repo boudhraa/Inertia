@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/libktx.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
+        
+        var createScene = function() {
+            var scene = new BABYLON.Scene(engine);
+        	var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(-1.4, -4 , 1), scene);
+            //camera.setPosition(new BABYLON.Vector3(-12,10, 33));
+        camera.setPosition(new BABYLON.Vector3(-5,10,40));
+            camera.attachControl(canvas, false);
+        
+        	var light0 = new BABYLON.HemisphericLight("Hemi0", new BABYLON.Vector3(0, 1, 0), scene);
+            light0.diffuse = new BABYLON.Color3(1, 1, 1);
+            light0.specular = new BABYLON.Color3(0, 0, 0);
+            light0.groundColor = new BABYLON.Color3(0, 0, 0);
+            light0.intensity = 1;
+                	
+            var pl = new BABYLON.PointLight("pl", new BABYLON.Vector3(3, 5, 3), scene);
+            pl.diffuse = new BABYLON.Color3(1, 1, 1);
+            pl.specular = new BABYLON.Color3(0, 0, 0);
+            pl.intensity = 1;
+            var mat2 = new BABYLON.StandardMaterial("mat1", scene);
+                	
+            var yellowball = new BABYLON.StandardMaterial("grass4", scene);
+        	yellowball.ambientTexture = new BABYLON.Texture("textures/grass4.png", scene);
+        	yellowball.diffuseColor = new BABYLON.Color3(1, 1,1);
+        
+            var mat2 = new BABYLON.StandardMaterial("grass4", scene);
+        	mat2.ambientTexture = new BABYLON.Texture("textures/wood3.jpg", scene);
+        	mat2.diffuseColor = new BABYLON.Color3(1, 1,1);
+        
+            var mat3 = new BABYLON.StandardMaterial("grass4", scene);
+        	mat3.ambientTexture = new BABYLON.Texture("textures/steel.jpg", scene);
+        	mat3.diffuseColor = new BABYLON.Color3(1, 1,1);
+        
+        
+        //The ramp 
+        	//var xp=0;//x position
+        	//var L = 15;//plane length
+        	//var a = 05/180*Math.PI;//angle
+            
+            var system = function(a,xp,L){
+            
+        	var plane = BABYLON.Mesh.CreateGround("ground1", 4, L, 1, scene);
+        	plane.position=new BABYLON.Vector3(0, 1.5,0);
+        	plane.rotation.x= a/180*Math.PI;
+         	plane.material=mat2;
+         	plane.position.y=2.0+L/2*Math.sin(a/180*Math.PI);
+         	plane.position.z=L/2-L/2*Math.cos(a/180*Math.PI);
+        	plane.position.x =xp;
+         	plane.visibility=1;
+         
+        //Resting Ball
+        var r =1.5;
+        	var sphere0 = BABYLON.Mesh.CreateSphere("sphere0", 16, r, scene);
+            sphere0.material=yellowball;
+            sphere0.position.y = 12+r/2 + L*Math.sin(a/180*Math.PI);
+            sphere0.position.z =r/2+L/2-L*Math.cos(a/180*Math.PI);
+        	sphere0.position.x=xp;
+        //Rolling Ball 	
+            var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, r, scene);
+            sphere.material=yellowball;
+            sphere.position.y = 2+r/2 + L*Math.sin(a/180*Math.PI);
+            sphere.position.z =r/2+L/2-L*Math.cos(a/180*Math.PI);
+        	sphere.position.x=xp;
+        //Stand
+         	var stand = BABYLON.MeshBuilder.CreateBox("box", {height: 2, width: 4, depth: 15,sideOrientation:2}, scene);
+        	stand.position= new BABYLON.Vector3(0,1,0);
+        	stand.material=mat3;
+            stand.position.x=xp;
+        // Tiled Ground 
+                    var xmin = -20;
+                    var zmin = -20;
+                    var xmax =  20;
+                    var zmax =  40;
+                    var precision = {
+                        "w" : 2,
+                        "h" : 2
+                    };
+                    var subdivisions = {
+                        'h' : 10,
+                        'w' : 10
+                    };
+                    // Create the Tiled Ground
+                  var tiledGround = new BABYLON.Mesh.CreateTiledGround("Tiled Ground", xmin, zmin, xmax, zmax, subdivisions, precision, scene);
+                  tiledGround.position = new BABYLON.Vector3(0, 0,0);
+        
+                	var grid = new BABYLON.GridMaterial("grid", scene);	
+                	grid.gridRatio = 0.1;
+                	//grid.majorUnitFrequency = 2;
+                	grid.minorUnitVisibility = 0.3;
+                	grid.mainColor = new BABYLON.Color3(0.3,0.3,0.3);
+        			grid.lineColor = new BABYLON.Color3(0.6,0.6,0.6);
+         			//grid.gridopacity=1;
+                	tiledGround.material =grid;
+            
+        //Enabling physics
+        	//scene.enablePhysics();
+        scene.enablePhysics(new BABYLON.Vector3(0,-9.81, 0), new BABYLON.OimoJSPlugin());
+            sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, {mass:1, restitution:0.0});
+            plane.physicsImpostor = new BABYLON.PhysicsImpostor(plane, BABYLON.PhysicsImpostor.BoxImpostor, {mass:0, restitution: 0.0, friction: 0.4})
+            tiledGround.physicsImpostor = new BABYLON.PhysicsImpostor(tiledGround, BABYLON.PhysicsImpostor.BoxImpostor, {mass:0, restitution: 2.9, friction: 0.4})
+        }
+        system(5, 7, 15);
+        system(10, 0, 15);
+        system(15, -7, 15);
+        
+        	return scene;
+        };
+var engine;
+try {
+    engine = createDefaultEngine();
+} catch(e) {
+    console.log("the available createEngine function failed. Creating the default engine instead");
+    engine = createDefaultEngine();
+}
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();;
+        sceneToRender = scene
+
+        engine.runRenderLoop(function () {
+            if (sceneToRender) {
+                sceneToRender.render();
+            }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
